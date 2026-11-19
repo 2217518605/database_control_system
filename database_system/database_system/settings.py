@@ -119,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "zh-hans"
 
 TIME_ZONE = "Asia/Shanghai"
 
@@ -136,3 +136,51 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+""" celery 配置 """
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_TIMEZONE = "Asia/Shanghai"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
+
+# 日志配置
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',  # 处理器类型：标准输出流（控制台）
+            'formatter': 'verbose',
+        },
+        'rotating_day_log': {
+            'level': 'INFO',
+            'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
+            'filename': BASE_DIR.parent / 'logs' / 'django.log',
+            # 'when': 'M',
+            # 'interval': 1, # 1天轮转1次
+            # 'atTime':time(11,51),
+            'maxBytes': 1024 * 300,  # 300KB
+            'backupCount': 7,  # 保留7个备份文件
+            'formatter': 'verbose',  # 格式：使用 'verbose' 详细格式
+            'encoding': 'utf-8',
+        }
+    },
+    'loggers': {  # 日志入口
+        'django': {
+            'handlers': ['console', 'rotating_day_log'],
+            'level': 'INFO',
+            'propagate': True,
+        }
+    }
+}
