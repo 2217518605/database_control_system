@@ -32,14 +32,15 @@ class InstanceSerializer(serializers.ModelSerializer):
     """ 实例序列化器 """
 
     cluster_name = serializers.CharField(source='cluster.name', read_only=True)
-    department_name = serializers.CharField(source='department.name', read_only=True)
+    department_name = serializers.CharField(source='cluster.department.name', read_only=True)
     password = serializers.CharField(write_only=True, required=False, allow_blank=False, min_length=8)
     # 只出的脱敏展示:
     password_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Instance
-        fields = ['id','host','port','username','is_active','password_updated_at','created_at','cluster','cluster_name','department_name','password_display']
+        fields = ['id','host','port','username','is_active','password_updated_at','created_at','cluster',
+                  'cluster_name','department_name','password_display',"password"]
         read_only_fields = ['created_at','password_updated_at','updated_at']
 
     def get_password_display(self, obj) -> str:

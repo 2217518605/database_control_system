@@ -29,6 +29,7 @@ load_dotenv(BASE_DIR / ".env")  # 加载 env 文件
 DEBUG = os.getenv("DEBUG","0").lower() in ("1", "true", "yes")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-5!xfnh3ol_!&ia_m1(yse$phtv6#6#fiq3$tctzha!@m1kd_iu")
 FERNET_KEY = os.getenv("FERNET_KEY", "")
+os.makedirs(BASE_DIR.parent / 'logs', exist_ok=True) # 自动创建 logs 目录
 
 ALLOWED_HOSTS = ["*"]
 
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "assets.middleware.RequestUseTimeMiddleware", # 请求耗时中间件
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -144,6 +146,8 @@ CELERY_TIMEZONE = "Asia/Shanghai"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
 
+PROBE_TIMEOUT = 5 # 探测超时时间
+
 # 日志配置
 LOGGING = {
     'version': 1,
@@ -163,24 +167,22 @@ LOGGING = {
             'class': 'logging.StreamHandler',  # 处理器类型：标准输出流（控制台）
             'formatter': 'verbose',
         },
-        'rotating_day_log': {
-            'level': 'INFO',
-            'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
-            'filename': BASE_DIR.parent / 'logs' / 'django.log',
-            # 'when': 'M',
-            # 'interval': 1, # 1天轮转1次
-            # 'atTime':time(11,51),
-            'maxBytes': 1024 * 300,  # 300KB
-            'backupCount': 7,  # 保留7个备份文件
-            'formatter': 'verbose',  # 格式：使用 'verbose' 详细格式
-            'encoding': 'utf-8',
-        }
     },
     'loggers': {  # 日志入口
         'django': {
-            'handlers': ['console', 'rotating_day_log'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
-        }
+        },
+        'assets': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     }
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
